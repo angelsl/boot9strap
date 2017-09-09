@@ -17,9 +17,9 @@ def encrypt_firm_section(section, iv, is_dev=False):
     return aes.encrypt(section)
 
 def build_b9s_firm(signature, is_dev=False, ntr_crypt=False):
-    sections = ['build/code11.bin', 'build/code9.bin', 'build/NDMA.bin', 'build/dabrt.bin']
+    sections = ['build/code11.bin', 'build/code9.bin']
     section_datas = []
-    load_addresses = [0x1FF80000, 0x08000200, 0x10002000, 0xC0000000]
+    load_addresses = [0x1FF80000, 0x08000200]
     for section in sections:
         if not os.path.isfile(section):
             print ('Failed to build FIRM: missing file %s!' % section)
@@ -29,30 +29,33 @@ def build_b9s_firm(signature, is_dev=False, ntr_crypt=False):
     # Write FIRM header.
     b9s = b'FIRM'
     # Write (zero (boot priority)), ARM11 Entrypoint, ARM9 Entrypoint
-    b9s += struct.pack('<III', 0x00000000, 0x1FF80200, 0x08001000)
+    b9s += struct.pack('<III', 0x00000000, 0x1FF80000, 0x08000200)
     b9s += b'\x00' * 0x2C
     # Write version value
     b9s += b'\x02'
     # Write boot9strap magic value
     b9s += b'B9S'
-    ofs = 0x200
+    ofs = 0x200 - 0x4000
     section_ofs_lst = []
     for i,data in enumerate(section_datas):
         section_ofs_lst.append(ofs)
-        b9s += struct.pack('<IIII', ofs, load_addresses[i], len(data), 0x00000002)
+        b9s += struct.pack('<iIII', ofs, load_addresses[i], len(data), 0x00000002)
         b9s += (hashlib.sha256(data).digest())
         ofs += len(data)
     b9s += binascii.unhexlify(signature)
     for i,data in enumerate(section_datas):
         if ntr_crypt:
-            iv = struct.pack('<IIII', section_ofs_lst[i], load_addresses[i], len(data), len(data))
+            iv = struct.pack('<iIII', section_ofs_lst[i], load_addresses[i], len(data), len(data))
             b9s += encrypt_firm_section(data, iv, is_dev)
         else:
             b9s += data
+    if len(b9s) > 0x4000:
+        print("Failed")
+        return None
     return b9s
 
 def main(argc, argv):
-    firms = ['out/boot9strap.firm', 'out/boot9strap_dev.firm', 'out/boot9strap_ntr.firm', 'out/boot9strap_ntr_dev.firm']
+    firms = ['out/boot9strap_ntr.firm'] # ['out/boot9strap.firm', 'out/boot9strap_dev.firm', 'out/boot9strap_ntr.firm', 'out/boot9strap_ntr_dev.firm']
     sigs = [perfect_signature, dev_perfect_signature, ntr_perfect_signature, dev_ntr_perfect_signature]
     for firm, sig in zip(firms, sigs):
         b9s = build_b9s_firm(sig, is_dev='dev' in firm, ntr_crypt='ntr' in firm)
