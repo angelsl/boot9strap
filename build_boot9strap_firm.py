@@ -65,7 +65,7 @@ def build_b9s_firm(signature, is_dev=False, ntr_crypt=False):
 
 def main(argc, argv):
     firms = ['out/boot9strap_ntr.firm'] # ['out/boot9strap.firm', 'out/boot9strap_dev.firm', 'out/boot9strap_ntr.firm', 'out/boot9strap_ntr_dev.firm']
-    sigs = [perfect_signature, dev_perfect_signature, ntr_perfect_signature, dev_ntr_perfect_signature]
+    sigs = [ntr_perfect_signature]
     for firm, sig in zip(firms, sigs):
         b9s, neg = build_b9s_firm(sig, is_dev='dev' in firm, ntr_crypt='ntr' in firm)
         if type(b9s) != bytes:
