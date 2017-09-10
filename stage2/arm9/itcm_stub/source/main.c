@@ -22,7 +22,7 @@
 
 #include "firm.h"
 
-void main(Firm *firm, bool isNand)
+void main(Firm *firm)
 {
     u32 argc;
     char *argv[2];
