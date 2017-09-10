@@ -1,5 +1,15 @@
-Boot9strap
+Boot9strap for strange flashcarts
 =====
+
+This is boot9strap with the dabort (and thus bootrom dumping) features removed so that it can fit
+within 0x4000 bytes.
+
+`boot9strap_ntr.firm` should be flashed so it shows up at 0x7E00 (as per normal).
+
+`boot9strap_ntr.firm.neg` should be flashed so it shows up at 0x4000.
+
+---
+
 ![License](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
 Boot9/Boot11 code execution.
