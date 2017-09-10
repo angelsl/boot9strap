@@ -19,7 +19,7 @@ def encrypt_firm_section(section, iv, is_dev=False):
 def build_b9s_firm(signature, is_dev=False, ntr_crypt=False):
     sections = ['build/code11.bin', 'build/code9.bin']
     section_datas = []
-    load_addresses = [0x1FF80000, 0x08000200]
+    load_addresses = [0x1FF80200, 0x08000200]
     for section in sections:
         if not os.path.isfile(section):
             print ('Failed to build FIRM: missing file %s!' % section)
@@ -29,7 +29,7 @@ def build_b9s_firm(signature, is_dev=False, ntr_crypt=False):
     # Write FIRM header.
     b9s = b'FIRM'
     # Write (zero (boot priority)), ARM11 Entrypoint, ARM9 Entrypoint
-    b9s += struct.pack('<III', 0x00000000, 0x1FF80000, 0x08000200)
+    b9s += struct.pack('<III', 0x00000000, 0x1FF80200, 0x08000200)
     b9s += b'\x00' * 0x2C
     # Write version value
     b9s += b'\x02'
