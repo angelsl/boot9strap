@@ -42,29 +42,38 @@ def build_b9s_firm(signature, is_dev=False, ntr_crypt=False):
         b9s += struct.pack('<iIII', ofs, load_addresses[i], len(data), 0x00000002)
         b9s += (hashlib.sha256(data).digest())
         ofs += len(data)
+    if len(sections) < 4:
+        b9s += b'\x00' * 0x30 * (4 - len(sections))
     b9s += binascii.unhexlify(signature)
+    b9s_neg = b''
     for i,data in enumerate(section_datas):
         if ntr_crypt:
             iv = struct.pack('<iIII', section_ofs_lst[i], load_addresses[i], len(data), len(data))
-            b9s += encrypt_firm_section(data, iv, is_dev)
+            enc_firm = encrypt_firm_section(data, iv, is_dev)
+            if len(enc_firm) != len(data):
+                print("Warn: plaintext and enciphered section have differing len")
+            b9s_neg += enc_firm
         else:
-            b9s += data
-    if len(b9s) > 0x4000:
-        print("Failed")
+            b9s_neg += data
+    if len(b9s) != 0x200:
+        print("Invalid FIRM header")
         return None
-    return b9s
+    if len(b9s_neg) > 0x3E00:
+        print("Payload too big")
+        return None
+    return (b9s, b9s_neg)
 
 def main(argc, argv):
     firms = ['out/boot9strap_ntr.firm'] # ['out/boot9strap.firm', 'out/boot9strap_dev.firm', 'out/boot9strap_ntr.firm', 'out/boot9strap_ntr_dev.firm']
     sigs = [perfect_signature, dev_perfect_signature, ntr_perfect_signature, dev_ntr_perfect_signature]
     for firm, sig in zip(firms, sigs):
-        b9s = build_b9s_firm(sig, is_dev='dev' in firm, ntr_crypt='ntr' in firm)
+        b9s, neg = build_b9s_firm(sig, is_dev='dev' in firm, ntr_crypt='ntr' in firm)
         if type(b9s) != bytes:
             return
         with open(firm, 'wb') as f:
             f.write(b9s)
-        with open('%s.sha' % firm, 'wb') as f:
-            f.write(hashlib.sha256(b9s).digest())
+        with open(firm + '.neg', 'wb') as f:
+            f.write(neg)
         print ('Successfully built %s!' % firm)
 
 if __name__ == '__main__':
