@@ -10,7 +10,7 @@
 
 .close
 
-.create "build/code11.bin",code_11_load_addr
+.create "build/code11.bin",0x1FF80200
 .area 0x10000
 .incbin "stage2/arm11/out/arm11.bin"
 .align 0x200
